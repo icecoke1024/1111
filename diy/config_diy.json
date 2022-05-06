@@ -1,0 +1,9 @@
+{
+    "params":
+    {
+        "global":
+        {
+            "exec": "sync"
+        }
+    }
+}
