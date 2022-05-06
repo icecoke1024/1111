@@ -14,19 +14,19 @@ jobs:
           ref: 'config'
       - name: clone
         run: |
-          git clone --single-branch --branch main https://github.com/icecoke1024/percollect.git
-          mv percollect/backUp/sendNotify.js percollect
+          git clone --single-branch --branch main https://github.com/icecoke1024/cron.git
+          mv cron/backUp/sendNotify.js cron
       - name: Pre Tasks
         env:
           EXPERIMENT: ${{ secrets.EXPERIMENT }}
         run: |
           for i in 'JRBODY.txt' '.env';do  
-              mv $i percollect && echo move $i || echo Not Have $i;
+              mv $i cron && echo move $i || echo Not Have $i;
           done
           if [ -d diy ];
           then
             echo 'Dir diy exist, move contents'
-            mv -f diy/* percollect/
+            mv -f diy/* cron/
           fi;
           if [ -f diy.sh ];
           then
@@ -35,12 +35,12 @@ jobs:
           fi;
       - uses: actions/setup-node@v2
       - name: install dependency
-        working-directory: ./percollect
+        working-directory: ./cron
         run: |
           npm uninstall dotenv
           npm i -g serverless
       - name: set serverless.yml and push env
-        working-directory: ./percollect
+        working-directory: ./cron
         env:
           TENCENT_REGION: ${{ secrets.SCF_REGION }}
           TENCENT_FUNCTION_NAME: ${{ secrets.TENCENT_FUNCTION_NAME }}
@@ -62,7 +62,7 @@ jobs:
           parameter=${parameter::-1}
           grep -E "^($parameter):" < ../config.yml | sed 's/: /=/' | while read line;do    echo $line >> $GITHUB_ENV;done
       - name: Check Visibility
-        working-directory: ./percollect
+        working-directory: ./cron
         if: ${{ github.event_name == 'workflow_dispatch' && !github.event.repository.private}}
         run: |
           echo 'Not a private repo!!! Please change to private!'
@@ -70,10 +70,10 @@ jobs:
           node notify.js
           rm -rf notify.js
 #       - name: version check
-#         working-directory: ./percollect
+#         working-directory: ./cron
 #         run: |
 #           sls info | grep Nodejs16.13 && sls remove
       - name: deploy
-        working-directory: ./percollect
+        working-directory: ./cron
         run: |
             (! (sls deploy | grep -E '错误信息|Error')) && echo '部署成功' || (echo '部署失败,可在群内置顶查看之前的readme帮助寻求解决办法'; echo 'require("./sendNotify").sendNotify("云函数部署异常！请重试","进入私库页面点击Action,进入对应action查看deploy步骤日志\n自己私库下方readme有常见问题解决方法",{ url: process.env.GITHUB_SERVER_URL + "/" + process.env.GITHUB_REPOSITORY + "/actions/runs/" + process.env.GITHUB_RUN_ID + "?check_suite_focus=true" })' > notify.js; node notify.js; exit 1) 
